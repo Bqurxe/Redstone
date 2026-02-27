@@ -1,0 +1,1389 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Redstone Compendium</title>
+<link href="https://fonts.googleapis.com/css2?family=Press+Start+2P&family=VT323:wght@400&family=Rajdhani:wght@300;400;600;700&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --red: #cc2200;
+    --red-bright: #ff3300;
+    --red-glow: #ff4422;
+    --red-dim: #661100;
+    --stone: #7a7a7a;
+    --stone-dark: #2a2a2a;
+    --stone-mid: #3d3d3d;
+    --stone-light: #555555;
+    --bg: #111111;
+    --text: #e8e0d0;
+    --text-dim: #999;
+    --gold: #ffaa00;
+    --easy: #44cc44;
+    --medium: #ffaa00;
+    --hard: #ff6600;
+    --extreme: #cc2200;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    background: var(--bg);
+    color: var(--text);
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 400;
+    overflow-x: hidden;
+    cursor: default;
+  }
+
+  /* Pixel grid background */
+  body::before {
+    content: '';
+    position: fixed;
+    inset: 0;
+    background-image:
+      linear-gradient(rgba(204,34,0,0.03) 1px, transparent 1px),
+      linear-gradient(90deg, rgba(204,34,0,0.03) 1px, transparent 1px);
+    background-size: 32px 32px;
+    pointer-events: none;
+    z-index: 0;
+  }
+
+  /* ===== HEADER ===== */
+  .header {
+    position: relative;
+    text-align: center;
+    padding: 60px 20px 40px;
+    border-bottom: 3px solid var(--red-dim);
+    background: linear-gradient(180deg, #1a0800 0%, var(--bg) 100%);
+    overflow: hidden;
+  }
+
+  .header::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 3px;
+    background: linear-gradient(90deg, transparent, var(--red-bright), var(--red-glow), var(--red-bright), transparent);
+    animation: scanline 3s linear infinite;
+    box-shadow: 0 0 20px var(--red-glow);
+  }
+
+  @keyframes scanline {
+    0% { opacity: 0.5; } 50% { opacity: 1; } 100% { opacity: 0.5; }
+  }
+
+  .dust-particles {
+    position: absolute;
+    inset: 0;
+    overflow: hidden;
+    pointer-events: none;
+  }
+
+  .particle {
+    position: absolute;
+    width: 4px;
+    height: 4px;
+    background: var(--red-glow);
+    opacity: 0;
+    animation: float var(--dur) var(--delay) ease-in-out infinite;
+    box-shadow: 0 0 6px var(--red-glow);
+  }
+
+  @keyframes float {
+    0% { opacity: 0; transform: translateY(0) translateX(0); }
+    20% { opacity: 0.8; }
+    100% { opacity: 0; transform: translateY(-120px) translateX(var(--drift)); }
+  }
+
+  .header-icon {
+    font-size: 48px;
+    margin-bottom: 16px;
+    display: block;
+    filter: drop-shadow(0 0 20px var(--red-glow));
+    animation: pulse-icon 2s ease-in-out infinite;
+  }
+
+  @keyframes pulse-icon {
+    0%, 100% { filter: drop-shadow(0 0 10px var(--red-glow)); }
+    50% { filter: drop-shadow(0 0 30px var(--red-glow)) drop-shadow(0 0 60px var(--red)); }
+  }
+
+  .title {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(18px, 4vw, 32px);
+    color: var(--red-bright);
+    text-shadow: 0 0 20px var(--red-glow), 3px 3px 0 var(--red-dim);
+    letter-spacing: 2px;
+    line-height: 1.4;
+  }
+
+  .subtitle {
+    font-family: 'VT323', monospace;
+    font-size: 22px;
+    color: var(--stone-light);
+    margin-top: 12px;
+    letter-spacing: 3px;
+  }
+
+  /* ===== NAV SLIDER ===== */
+  .nav-rail {
+    position: sticky;
+    top: 0;
+    z-index: 100;
+    background: rgba(17,17,17,0.97);
+    border-bottom: 2px solid var(--red-dim);
+    backdrop-filter: blur(10px);
+  }
+
+  .nav-inner {
+    display: flex;
+    overflow-x: auto;
+    scrollbar-width: none;
+    gap: 0;
+    padding: 0 20px;
+  }
+
+  .nav-inner::-webkit-scrollbar { display: none; }
+
+  .nav-btn {
+    flex-shrink: 0;
+    padding: 14px 22px;
+    background: none;
+    border: none;
+    color: var(--text-dim);
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 15px;
+    font-weight: 600;
+    letter-spacing: 1.5px;
+    text-transform: uppercase;
+    cursor: pointer;
+    position: relative;
+    transition: color 0.2s;
+    white-space: nowrap;
+  }
+
+  .nav-btn::after {
+    content: '';
+    position: absolute;
+    bottom: 0; left: 0; right: 0;
+    height: 2px;
+    background: var(--red-bright);
+    transform: scaleX(0);
+    transition: transform 0.2s;
+    box-shadow: 0 0 10px var(--red-glow);
+  }
+
+  .nav-btn:hover { color: var(--text); }
+  .nav-btn.active { color: var(--red-bright); }
+  .nav-btn.active::after { transform: scaleX(1); }
+
+  .nav-pill {
+    display: inline-block;
+    width: 8px; height: 8px;
+    border-radius: 0;
+    background: currentColor;
+    margin-right: 8px;
+    vertical-align: middle;
+    position: relative;
+    top: -1px;
+  }
+
+  /* ===== PROGRESS SLIDER ===== */
+  .progress-bar {
+    position: fixed;
+    top: 0; left: 0;
+    height: 3px;
+    background: var(--red-bright);
+    box-shadow: 0 0 10px var(--red-glow);
+    transition: width 0.1s;
+    z-index: 200;
+  }
+
+  /* ===== SECTIONS ===== */
+  .section {
+    max-width: 1100px;
+    margin: 0 auto;
+    padding: 80px 24px;
+    position: relative;
+    z-index: 1;
+  }
+
+  .section-divider {
+    border: none;
+    border-top: 1px solid var(--stone-mid);
+    margin: 0 24px;
+  }
+
+  .section-header {
+    display: flex;
+    align-items: center;
+    gap: 16px;
+    margin-bottom: 48px;
+  }
+
+  .section-label {
+    font-family: 'Press Start 2P', monospace;
+    font-size: clamp(10px, 2vw, 14px);
+    letter-spacing: 1px;
+    line-height: 1.6;
+  }
+
+  .section-tag {
+    font-family: 'VT323', monospace;
+    font-size: 13px;
+    letter-spacing: 2px;
+    padding: 4px 10px;
+    border: 1px solid;
+    border-radius: 0;
+  }
+
+  .tag-easy { color: var(--easy); border-color: var(--easy); background: rgba(68,204,68,0.1); }
+  .tag-medium { color: var(--medium); border-color: var(--medium); background: rgba(255,170,0,0.1); }
+  .tag-hard { color: var(--hard); border-color: var(--hard); background: rgba(255,102,0,0.1); }
+  .tag-extreme { color: var(--extreme); border-color: var(--extreme); background: rgba(204,34,0,0.15); }
+  .tag-tutorial { color: var(--gold); border-color: var(--gold); background: rgba(255,170,0,0.1); }
+
+  .label-easy { color: var(--easy); text-shadow: 0 0 10px var(--easy); }
+  .label-medium { color: var(--medium); text-shadow: 0 0 10px var(--medium); }
+  .label-hard { color: var(--hard); text-shadow: 0 0 10px var(--hard); }
+  .label-extreme { color: var(--extreme); text-shadow: 0 0 10px var(--extreme); }
+  .label-tutorial { color: var(--gold); text-shadow: 0 0 10px var(--gold); }
+
+  /* ===== CARDS GRID ===== */
+  .cards {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(300px, 1fr));
+    gap: 20px;
+  }
+
+  .card {
+    background: var(--stone-dark);
+    border: 1px solid var(--stone-mid);
+    border-radius: 0;
+    padding: 24px;
+    position: relative;
+    overflow: hidden;
+    transition: transform 0.2s, border-color 0.2s;
+    cursor: pointer;
+  }
+
+  .card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--accent);
+    box-shadow: 0 0 12px var(--accent);
+  }
+
+  .card::after {
+    content: '';
+    position: absolute;
+    inset: 0;
+    background: radial-gradient(ellipse at top left, rgba(255,255,255,0.02) 0%, transparent 60%);
+  }
+
+  .card:hover {
+    transform: translateY(-4px);
+    border-color: var(--accent);
+  }
+
+  .card:hover::before {
+    box-shadow: 0 0 24px var(--accent);
+  }
+
+  .card-icon {
+    font-size: 28px;
+    margin-bottom: 12px;
+    display: block;
+  }
+
+  .card-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-size: 18px;
+    font-weight: 700;
+    color: var(--text);
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    margin-bottom: 10px;
+  }
+
+  .card-desc {
+    font-size: 15px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .card-steps {
+    margin-top: 16px;
+    border-top: 1px solid var(--stone-light);
+    padding-top: 16px;
+  }
+
+  .card-steps-title {
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--accent);
+    margin-bottom: 10px;
+  }
+
+  .card-steps ol {
+    padding-left: 18px;
+    color: var(--text-dim);
+    font-size: 14px;
+    line-height: 1.8;
+  }
+
+  .card-steps ol li::marker {
+    color: var(--accent);
+    font-weight: 700;
+  }
+
+  .card-badge {
+    position: absolute;
+    top: 16px; right: 16px;
+    font-family: 'VT323', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    color: var(--accent);
+    opacity: 0.6;
+  }
+
+  .difficulty-bar {
+    display: flex;
+    gap: 3px;
+    margin-top: 14px;
+  }
+
+  .bar-pip {
+    height: 4px;
+    flex: 1;
+    background: var(--stone-light);
+    border-radius: 0;
+  }
+
+  .bar-pip.lit {
+    background: var(--accent);
+    box-shadow: 0 0 6px var(--accent);
+  }
+
+  /* Easy */
+  .card[data-diff="easy"] { --accent: var(--easy); }
+  .card[data-diff="medium"] { --accent: var(--medium); }
+  .card[data-diff="hard"] { --accent: var(--hard); }
+  .card[data-diff="extreme"] { --accent: var(--extreme); }
+  .card[data-diff="tutorial"] { --accent: var(--gold); }
+
+  /* ===== TUTORIAL CARDS ===== */
+  .tutorial-card {
+    background: var(--stone-dark);
+    border: 1px solid var(--stone-mid);
+    padding: 28px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s, transform 0.2s;
+    cursor: pointer;
+    --accent: var(--gold);
+  }
+
+  .tutorial-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+    background: var(--gold);
+    box-shadow: 0 0 12px var(--gold);
+  }
+
+  .tutorial-card:hover {
+    border-color: var(--gold);
+    transform: translateY(-3px);
+  }
+
+  .tutorial-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(320px, 1fr));
+    gap: 20px;
+  }
+
+  .tutorial-tag-row {
+    display: flex;
+    gap: 8px;
+    flex-wrap: wrap;
+    margin-bottom: 12px;
+  }
+
+  .t-tag {
+    font-family: 'VT323', monospace;
+    font-size: 12px;
+    letter-spacing: 1px;
+    padding: 2px 8px;
+    border: 1px solid var(--stone-light);
+    color: var(--text-dim);
+  }
+
+  .t-tag.featured {
+    border-color: var(--gold);
+    color: var(--gold);
+  }
+
+  .step-flow {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+    margin-top: 16px;
+  }
+
+  .step-row {
+    display: flex;
+    gap: 12px;
+    align-items: flex-start;
+  }
+
+  .step-num {
+    font-family: 'Press Start 2P', monospace;
+    font-size: 8px;
+    color: var(--gold);
+    background: rgba(255,170,0,0.1);
+    border: 1px solid var(--gold);
+    padding: 4px 7px;
+    flex-shrink: 0;
+    margin-top: 2px;
+  }
+
+  .step-text {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.5;
+  }
+
+  /* ===== INTRO SECTION ===== */
+  .intro-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(220px, 1fr));
+    gap: 16px;
+    margin-top: 40px;
+  }
+
+  .intro-block {
+    border: 1px solid var(--stone-mid);
+    padding: 20px;
+    background: rgba(42,42,42,0.5);
+    position: relative;
+  }
+
+  .intro-block-icon {
+    font-size: 24px;
+    margin-bottom: 10px;
+  }
+
+  .intro-block-title {
+    font-family: 'Rajdhani', sans-serif;
+    font-weight: 700;
+    font-size: 14px;
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    color: var(--red-bright);
+    margin-bottom: 8px;
+  }
+
+  .intro-block p {
+    font-size: 14px;
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  /* ===== REDSTONE SCHEMATIC (ASCII Art Style) ===== */
+  .schematic {
+    background: #0a0a0a;
+    border: 1px solid var(--stone-mid);
+    padding: 16px;
+    font-family: 'VT323', monospace;
+    font-size: 16px;
+    color: var(--red-bright);
+    margin-top: 16px;
+    overflow-x: auto;
+    white-space: pre;
+    line-height: 1.4;
+    text-shadow: 0 0 6px var(--red-glow);
+  }
+
+  /* ===== SCROLL TO TOP ===== */
+  .scroll-top {
+    position: fixed;
+    bottom: 30px;
+    right: 30px;
+    z-index: 100;
+    background: var(--stone-dark);
+    border: 1px solid var(--red-dim);
+    color: var(--red-bright);
+    width: 44px;
+    height: 44px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    cursor: pointer;
+    font-size: 18px;
+    transition: all 0.2s;
+    opacity: 0;
+    pointer-events: none;
+  }
+
+  .scroll-top.visible {
+    opacity: 1;
+    pointer-events: all;
+  }
+
+  .scroll-top:hover {
+    background: var(--red-dim);
+    box-shadow: 0 0 16px var(--red-glow);
+  }
+
+  /* ===== COMPONENTS DESC ===== */
+  .comp-table {
+    width: 100%;
+    border-collapse: collapse;
+    font-size: 15px;
+    margin-top: 24px;
+  }
+
+  .comp-table th {
+    text-align: left;
+    font-family: 'VT323', monospace;
+    font-size: 14px;
+    letter-spacing: 2px;
+    color: var(--red-bright);
+    padding: 10px 16px;
+    border-bottom: 2px solid var(--red-dim);
+    background: rgba(204,34,0,0.06);
+  }
+
+  .comp-table td {
+    padding: 10px 16px;
+    border-bottom: 1px solid var(--stone-mid);
+    color: var(--text-dim);
+    line-height: 1.6;
+  }
+
+  .comp-table tr:hover td {
+    background: rgba(255,255,255,0.02);
+    color: var(--text);
+  }
+
+  .comp-table td:first-child {
+    color: var(--text);
+    font-weight: 600;
+  }
+
+  em-r { color: var(--red-bright); font-style: normal; font-weight: 700; }
+  em-g { color: var(--easy); font-style: normal; font-weight: 700; }
+  em-y { color: var(--medium); font-style: normal; font-weight: 700; }
+</style>
+</head>
+<body>
+
+<div class="progress-bar" id="progress"></div>
+
+<!-- Header -->
+<div class="header">
+  <div class="dust-particles" id="particles"></div>
+  <span class="header-icon">🔴</span>
+  <h1 class="title">Redstone<br>Compendium</h1>
+  <p class="subtitle">◆ THE ADVANCED ENGINEER'S GUIDE ◆</p>
+</div>
+
+<!-- Navigation -->
+<nav class="nav-rail">
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="scrollTo('intro')"><span class="nav-pill"></span>Basics</button>
+    <button class="nav-btn" onclick="scrollTo('easy')"><span class="nav-pill" style="color:var(--easy)"></span>Easy</button>
+    <button class="nav-btn" onclick="scrollTo('medium')"><span class="nav-pill" style="color:var(--medium)"></span>Medium</button>
+    <button class="nav-btn" onclick="scrollTo('hard')"><span class="nav-pill" style="color:var(--hard)"></span>Hard</button>
+    <button class="nav-btn" onclick="scrollTo('extreme')"><span class="nav-pill" style="color:var(--extreme)"></span>Extreme</button>
+    <button class="nav-btn" onclick="scrollTo('tutorials')"><span class="nav-pill" style="color:var(--gold)"></span>Tutorials</button>
+  </div>
+</nav>
+
+<!-- INTRO -->
+<section class="section" id="intro">
+  <div class="section-header">
+    <div>
+      <span class="section-tag tag-tutorial">01 — FOUNDATIONS</span>
+      <h2 class="section-label" style="color:var(--text); margin-top:10px;">Redstone Basics</h2>
+    </div>
+  </div>
+  <p style="color:var(--text-dim); font-size:17px; max-width:700px; line-height:1.8;">
+    Redstone is Minecraft's electrical system — a complex web of signals, logic gates, and mechanical contraptions. Master these fundamentals before advancing to complex circuits.
+  </p>
+
+  <table class="comp-table">
+    <thead>
+      <tr>
+        <th>Component</th>
+        <th>Function</th>
+        <th>Signal Strength</th>
+        <th>Notes</th>
+      </tr>
+    </thead>
+    <tbody>
+      <tr><td>🔴 Redstone Dust</td><td>Carries signal across surfaces</td><td>Decreases by 1/block (max 15)</td><td>Place repeaters every 15 blocks</td></tr>
+      <tr><td>🔁 Repeater</td><td>Extends signal, adds delay</td><td>Resets to 15</td><td>Can be locked by adjacent repeater</td></tr>
+      <tr><td>⚡ Comparator</td><td>Compares/subtracts signals</td><td>Variable</td><td>Key for advanced logic</td></tr>
+      <tr><td>🕹️ Lever</td><td>Continuous ON/OFF power source</td><td>15</td><td>Toggles — stays in position</td></tr>
+      <tr><td>🔘 Button</td><td>Momentary pulse source</td><td>15 (brief)</td><td>Stone = 1 tick, Wood = 1.5 ticks</td></tr>
+      <tr><td>🔡 Piston</td><td>Pushes blocks on power</td><td>—</td><td>Max 12-block push</td></tr>
+      <tr><td>🏋️ Sticky Piston</td><td>Pushes and pulls blocks</td><td>—</td><td>Cannot pull slime/honey blocks</td></tr>
+      <tr><td>🔦 Redstone Torch</td><td>Always-on power source / NOT gate</td><td>15 (dim=0)</td><td>Inverts signal above/beside</td></tr>
+      <tr><td>🔔 Observer</td><td>Detects block state changes</td><td>15 (1 tick pulse)</td><td>Crucial for farms and detectors</td></tr>
+      <tr><td>🧲 Dropper/Dispenser</td><td>Ejects items on pulse</td><td>—</td><td>Dropper doesn't activate items</td></tr>
+    </tbody>
+  </table>
+
+  <div class="intro-grid">
+    <div class="intro-block">
+      <div class="intro-block-icon">⏱️</div>
+      <div class="intro-block-title">Tick System</div>
+      <p>1 game tick = 0.05 seconds. Redstone ticks are <em-r>2 game ticks</em-r> (0.1s). Repeaters add 1–4 RT delay.</p>
+    </div>
+    <div class="intro-block">
+      <div class="intro-block-icon">🔁</div>
+      <div class="intro-block-title">Signal Power</div>
+      <p>Signal starts at 15, drops by 1 per block. At 0 it dies. Use repeaters to <em-r>boost back to 15</em-r>.</p>
+    </div>
+    <div class="intro-block">
+      <div class="intro-block-icon">⬆️</div>
+      <div class="intro-block-title">Vertical Signals</div>
+      <p>Use repeaters going upward or dust on <em-r>staircase blocks</em-r>. Comparators work similarly.</p>
+    </div>
+    <div class="intro-block">
+      <div class="intro-block-icon">🧱</div>
+      <div class="intro-block-title">Powered Blocks</div>
+      <p>Solid opaque blocks can be <em-r>powered</em-r> (strongly or weakly). This distinction matters for piston timing.</p>
+    </div>
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- EASY -->
+<section class="section" id="easy">
+  <div class="section-header">
+    <div>
+      <span class="section-tag tag-easy">02 — DIFFICULTY</span>
+      <h2 class="section-label label-easy" style="margin-top:10px;">Easy Circuits</h2>
+    </div>
+  </div>
+  <p style="color:var(--text-dim); font-size:17px; max-width:700px; line-height:1.8; margin-bottom:40px;">
+    Perfect for beginners. These circuits use a handful of components and teach the fundamentals of signal flow and basic logic.
+  </p>
+  <div class="cards">
+
+    <div class="card" data-diff="easy">
+      <span class="card-badge">EASY — 1/5</span>
+      <span class="card-icon">💡</span>
+      <div class="card-title">Simple Light Switch</div>
+      <div class="card-desc">Connect a lever to a lamp via redstone dust. The foundation of every redstone circuit.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip"></div><div class="bar-pip"></div><div class="bar-pip"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Place a redstone lamp on the ground</li>
+          <li>Run redstone dust from the lamp</li>
+          <li>Place a lever at the end of the dust trail</li>
+          <li>Toggle lever to power the lamp</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="easy">
+      <span class="card-badge">EASY — 2/5</span>
+      <span class="card-icon">🚪</span>
+      <div class="card-title">Basic Door Trigger</div>
+      <div class="card-desc">Use pressure plates or buttons to open iron doors automatically when approached.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div><div class="bar-pip"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Place an iron door in a doorway</li>
+          <li>Lay pressure plates on both sides</li>
+          <li>Connect with redstone if plates are far from door</li>
+          <li>Walk over plate to open door automatically</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="easy">
+      <span class="card-badge">EASY — 3/5</span>
+      <span class="card-icon">🔔</span>
+      <div class="card-title">NOT Gate (Inverter)</div>
+      <div class="card-desc">Using a redstone torch to flip signal state — when input is ON, output is OFF.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div><div class="bar-pip"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Place a solid block with a torch on top</li>
+          <li>Run dust to the side of the block (not top)</li>
+          <li>When dust powers block, torch turns OFF</li>
+          <li>Output from torch = inverted input</li>
+        </ol>
+      </div>
+      <div class="schematic">■ = Block  | = Dust  T = Torch
+
+  [Input Dust]─── ■ T ───[Output]
+                  ↑
+           (block powers off torch)</div>
+    </div>
+
+    <div class="card" data-diff="easy">
+      <span class="card-badge">EASY — 4/5</span>
+      <span class="card-icon">⏳</span>
+      <div class="card-title">Repeater Delay Line</div>
+      <div class="card-desc">Chain repeaters to create precise time delays for clocks, traps, or sequential activation.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div><div class="bar-pip"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Place repeaters in a line facing the same direction</li>
+          <li>Right-click each to set delay (1–4 ticks)</li>
+          <li>Wire start to power source and end to output</li>
+          <li>Adjust tick count for desired delay</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="easy">
+      <span class="card-badge">EASY — 5/5</span>
+      <span class="card-icon">🔐</span>
+      <div class="card-title">AND Gate</div>
+      <div class="card-desc">Output is ON only when BOTH inputs are powered. Essential for conditional logic.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div><div class="bar-pip"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Place two NOT gates (torches on blocks) as inputs</li>
+          <li>Feed both outputs into a third block</li>
+          <li>Place a torch on that third block (second invert)</li>
+          <li>Output is only HIGH when both inputs are HIGH</li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- MEDIUM -->
+<section class="section" id="medium">
+  <div class="section-header">
+    <div>
+      <span class="section-tag tag-medium">03 — DIFFICULTY</span>
+      <h2 class="section-label label-medium" style="margin-top:10px;">Medium Circuits</h2>
+    </div>
+  </div>
+  <p style="color:var(--text-dim); font-size:17px; max-width:700px; line-height:1.8; margin-bottom:40px;">
+    You know the basics. Now combine components to build clocks, T-flip-flops, and multi-piston contraptions.
+  </p>
+  <div class="cards">
+
+    <div class="card" data-diff="medium">
+      <span class="card-badge">MEDIUM — 1/5</span>
+      <span class="card-icon">🕰️</span>
+      <div class="card-title">5-Clock Circuit</div>
+      <div class="card-desc">A looping circuit that toggles signal at a controllable rate. The heartbeat of automated farms.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Place 3 redstone torches in a triangular layout</li>
+          <li>Connect each torch's block to the next torch with dust</li>
+          <li>Signal will loop, creating a clock</li>
+          <li>Tap off any torch for the clock output</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="medium">
+      <span class="card-badge">MEDIUM — 2/5</span>
+      <span class="card-icon">🔄</span>
+      <div class="card-title">T-Flip-Flop</div>
+      <div class="card-desc">A circuit that toggles state on each pulse — turns momentary buttons into persistent toggle switches.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Place a sticky piston facing down</li>
+          <li>Put a redstone block in front of piston</li>
+          <li>Wire a pulse from button to piston trigger</li>
+          <li>Block moves in/out = steady toggle output</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="medium">
+      <span class="card-badge">MEDIUM — 3/5</span>
+      <span class="card-icon">🌾</span>
+      <div class="card-title">Simple Auto-Farm</div>
+      <div class="card-desc">Use a clock + dispenser/water to auto-harvest wheat, carrots, or potatoes.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Build a flat 9×9 farmland area with water in center</li>
+          <li>Place dispensers along one edge filled with water buckets</li>
+          <li>Wire a clock into the dispensers</li>
+          <li>Water flows, breaks crops, collects with hopper system</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="medium">
+      <span class="card-badge">MEDIUM — 4/5</span>
+      <span class="card-icon">🔢</span>
+      <div class="card-title">Item Counter</div>
+      <div class="card-desc">Use a comparator reading from a hopper to detect when a specific number of items are collected.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Place a hopper into a chest</li>
+          <li>Put a comparator beside the chest reading output</li>
+          <li>Fill chest to desired level with filler items</li>
+          <li>Comparator outputs when threshold is reached</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="medium">
+      <span class="card-badge">MEDIUM — 5/5</span>
+      <span class="card-icon">🔒</span>
+      <div class="card-title">Combination Lock (Basic)</div>
+      <div class="card-desc">A 3-lever lock that only opens when levers are in the correct sequence.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Place 3 levers — some should power when OFF, others when ON</li>
+          <li>Run each through a NOT gate if "OFF" is the correct position</li>
+          <li>Feed all outputs into an AND gate chain</li>
+          <li>AND output opens door only when all are correct</li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- HARD -->
+<section class="section" id="hard">
+  <div class="section-header">
+    <div>
+      <span class="section-tag tag-hard">04 — DIFFICULTY</span>
+      <h2 class="section-label label-hard" style="margin-top:10px;">Hard Circuits</h2>
+    </div>
+  </div>
+  <p style="color:var(--text-dim); font-size:17px; max-width:700px; line-height:1.8; margin-bottom:40px;">
+    Multi-component systems requiring precise timing, slime block mechanics, and careful layout planning.
+  </p>
+  <div class="cards">
+
+    <div class="card" data-diff="hard">
+      <span class="card-badge">HARD — 1/5</span>
+      <span class="card-icon">🚂</span>
+      <div class="card-title">Flying Machine</div>
+      <div class="card-desc">Use alternating pistons and slime blocks to build a self-propelled flying structure.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Build a 2-piston engine with slime blocks between them</li>
+          <li>Attach observers facing opposite pistons</li>
+          <li>Observers detect each other's block updates</li>
+          <li>Chain creates alternating push — continuous movement</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="hard">
+      <span class="card-badge">HARD — 2/5</span>
+      <span class="card-icon">🔐</span>
+      <div class="card-title">Keycard Lock</div>
+      <div class="card-desc">Place a specific item type in a dropper — comparator reads item data to authenticate.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Use a dropper with a comparator reading it in subtract mode</li>
+          <li>Fill specific slot with known item (gives known signal)</li>
+          <li>Correct item → specific comparator output level</li>
+          <li>Only that exact signal level triggers unlock</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="hard">
+      <span class="card-badge">HARD — 3/5</span>
+      <span class="card-icon">🔢</span>
+      <div class="card-title">Binary Adder</div>
+      <div class="card-desc">XOR gates + carry logic to perform actual binary addition in-game.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Build two XOR gates from NAND gate combinations</li>
+          <li>Connect first XOR for sum bit, second for carry</li>
+          <li>Feed carry out into next bit's adder circuit</li>
+          <li>Chain for multi-bit addition operations</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="hard">
+      <span class="card-badge">HARD — 4/5</span>
+      <span class="card-icon">🌊</span>
+      <div class="card-title">Flood Defense System</div>
+      <div class="card-desc">Sensor-triggered floodgate using observers + dispensers to automatically place/remove water barriers.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Place observers along a channel rim facing inward</li>
+          <li>Feed signal through flip-flop to prevent double trigger</li>
+          <li>Power dispensers with water buckets along barrier line</li>
+          <li>Observer detects water → dispensers plug the breach</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="hard">
+      <span class="card-badge">HARD — 5/5</span>
+      <span class="card-icon">🏗️</span>
+      <div class="card-title">Piston Elevator</div>
+      <div class="card-desc">A vertical transport system using alternating slime block pistons to launch the player upward safely.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Stack piston pairs in alternating directions vertically</li>
+          <li>Slime blocks between each pair for cushioning</li>
+          <li>Clock signal alternates each piston pair in sequence</li>
+          <li>Player stands on slime — bounced upward with each tick</li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- EXTREME -->
+<section class="section" id="extreme">
+  <div class="section-header">
+    <div>
+      <span class="section-tag tag-extreme">05 — DIFFICULTY</span>
+      <h2 class="section-label label-extreme" style="margin-top:10px;">Extreme Circuits</h2>
+    </div>
+  </div>
+  <p style="color:var(--text-dim); font-size:17px; max-width:700px; line-height:1.8; margin-bottom:40px;">
+    Master-level engineering. These projects can take hours or days and require deep understanding of timing, quasi-connectivity, and zero-tick pulses.
+  </p>
+  <div class="cards">
+
+    <div class="card" data-diff="extreme">
+      <span class="card-badge">EXTREME — 1/5</span>
+      <span class="card-icon">🖥️</span>
+      <div class="card-title">In-Game Display Screen</div>
+      <div class="card-desc">A pixel display using pistons and colored blocks — programmable with redstone logic.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Build a grid of sticky pistons facing outward</li>
+          <li>Attach colored blocks (wool) to each piston head</li>
+          <li>Wire each piston individually to a decoder circuit</li>
+          <li>Send binary input → decoder selects correct pistons</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="extreme">
+      <span class="card-badge">EXTREME — 2/5</span>
+      <span class="card-icon">🤖</span>
+      <div class="card-title">Programmable ALU</div>
+      <div class="card-desc">Arithmetic Logic Unit capable of addition, subtraction, AND, OR operations in 4-bit binary.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Build 4-bit registers using T-flip-flop columns</li>
+          <li>Wire into full adder chain with carry propagation</li>
+          <li>Add multiplexer to select operation mode (AND/OR/ADD)</li>
+          <li>Output goes to 4-bit display decoder</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="extreme">
+      <span class="card-badge">EXTREME — 3/5</span>
+      <span class="card-icon">📡</span>
+      <div class="card-title">Wireless Redstone</div>
+      <div class="card-desc">Use observer chains reading dispensed items to transmit signals over unlimited distances without wires.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Set up a dropper-observer chain at transmitter</li>
+          <li>Observer detects dispensed item = sends update packet</li>
+          <li>Distant observers tuned to same block watch for state changes</li>
+          <li>Receiver observer triggers local circuit on detection</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="extreme">
+      <span class="card-badge">EXTREME — 4/5</span>
+      <span class="card-icon">🎮</span>
+      <div class="card-title">Playable In-Game Game</div>
+      <div class="card-desc">Build Pong, Snake, or Tic-Tac-Toe using redstone logic, displays, and player-input detection.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Build a pixel display (see Display Screen project)</li>
+          <li>Create state machine using memory cells</li>
+          <li>Map player pressure plates to directional inputs</li>
+          <li>Collision/win detection via comparator logic</li>
+        </ol>
+      </div>
+    </div>
+
+    <div class="card" data-diff="extreme">
+      <span class="card-badge">EXTREME — 5/5</span>
+      <span class="card-icon">🧮</span>
+      <div class="card-title">Full CPU (8-bit)</div>
+      <div class="card-desc">The ultimate project: a Turing-complete 8-bit CPU with RAM, ROM program counter, and opcodes.</div>
+      <div class="difficulty-bar">
+        <div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div><div class="bar-pip lit"></div>
+      </div>
+      <div class="card-steps">
+        <div class="card-steps-title">// STEPS</div>
+        <ol>
+          <li>Build 8-bit RAM using dropper/comparator cells</li>
+          <li>Build a Program Counter (PC) with increment logic</li>
+          <li>Wire PC output to ROM address decoder</li>
+          <li>ROM feeds opcode → ALU executes → write back to RAM</li>
+        </ol>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<hr class="section-divider">
+
+<!-- TUTORIALS -->
+<section class="section" id="tutorials">
+  <div class="section-header">
+    <div>
+      <span class="section-tag tag-tutorial">06 — TUTORIALS</span>
+      <h2 class="section-label label-tutorial" style="margin-top:10px;">Step-by-Step Builds</h2>
+    </div>
+  </div>
+  <p style="color:var(--text-dim); font-size:17px; max-width:700px; line-height:1.8; margin-bottom:40px;">
+    Detailed build tutorials for the most iconic and useful redstone contraptions. Follow each step exactly for clean, reliable results.
+  </p>
+
+  <div class="tutorial-grid">
+
+    <!-- 2x2 Piston Door -->
+    <div class="tutorial-card">
+      <div class="tutorial-tag-row">
+        <span class="t-tag featured">FEATURED</span>
+        <span class="t-tag">PISTONS</span>
+        <span class="t-tag">DOORS</span>
+        <span class="t-tag">MEDIUM</span>
+      </div>
+      <span class="card-icon">🚪</span>
+      <div class="card-title">2×2 Piston Door</div>
+      <div class="card-desc">A seamless 2-wide 2-tall flush piston door. Opens from both sides with a single button press.</div>
+      <div class="schematic">  [B][B]  ← 2 wide opening
+  [B][B]  ← 2 tall opening
+  P = Piston  B = Block  R = Dust
+  ┌──────────┐
+  │ P→[B][B]←P │
+  │ P→[B][B]←P │
+  └──────────┘
+     ↓     ↓
+    R R   R R  (signal lines)
+       [BTN]</div>
+      <div class="step-flow">
+        <div class="step-row"><span class="step-num">01</span><span class="step-text">Dig a 4-wide, 3-tall opening in your wall. The door will sit inside this space.</span></div>
+        <div class="step-row"><span class="step-num">02</span><span class="step-text">Place 2 sticky pistons on the left side facing right, and 2 sticky pistons on the right side facing left — aligned to the 4 door blocks.</span></div>
+        <div class="step-row"><span class="step-num">03</span><span class="step-text">Attach your chosen door blocks to the piston heads (usually matching your wall material).</span></div>
+        <div class="step-row"><span class="step-num">04</span><span class="step-text">Run redstone dust down behind each piston column, beneath the floor if needed to keep it hidden.</span></div>
+        <div class="step-row"><span class="step-num">05</span><span class="step-text">Connect a T-flip-flop so a button on each side of the door toggles the signal persistently.</span></div>
+        <div class="step-row"><span class="step-num">06</span><span class="step-text">Test: pressing the button should retract both sides simultaneously, leaving a 2×2 gap.</span></div>
+      </div>
+    </div>
+
+    <!-- 2x2 Underground Hidden Door -->
+    <div class="tutorial-card">
+      <div class="tutorial-tag-row">
+        <span class="t-tag featured">POPULAR</span>
+        <span class="t-tag">HIDDEN</span>
+        <span class="t-tag">UNDERGROUND</span>
+        <span class="t-tag">HARD</span>
+      </div>
+      <span class="card-icon">🕳️</span>
+      <div class="card-title">2×2 Underground Entrance</div>
+      <div class="card-desc">A hidden floor hatch that slides open when triggered — perfectly flush when closed.</div>
+      <div class="schematic">  TOP VIEW (floor level):
+  ┌───┬───┐
+  │[F]│[F]│  F = Floor blocks
+  ├───┼───┤     (on piston heads)
+  │[F]│[F]│
+  └───┴───┘
+  ↕ Pistons retract downward
+  Reveals 2×2 staircase below</div>
+      <div class="step-flow">
+        <div class="step-row"><span class="step-num">01</span><span class="step-text">Dig 3 blocks down under your chosen 2×2 floor area. This houses the piston mechanism.</span></div>
+        <div class="step-row"><span class="step-num">02</span><span class="step-text">Place 4 sticky pistons pointing upward in a 2×2 grid, 2 blocks below floor level.</span></div>
+        <div class="step-row"><span class="step-num">03</span><span class="step-text">Attach matching floor blocks to each piston head — they should sit perfectly flush with surrounding floor.</span></div>
+        <div class="step-row"><span class="step-num">04</span><span class="step-text">Route redstone dust below the floor to all 4 pistons simultaneously using a central signal trunk.</span></div>
+        <div class="step-row"><span class="step-num">05</span><span class="step-text">Use a hidden trigger: a pressure plate nearby, a painting-concealed lever, or a daylight sensor.</span></div>
+        <div class="step-row"><span class="step-num">06</span><span class="step-text">Wire trigger through a T-flip-flop so the floor stays open until triggered again. Build stairs below.</span></div>
+      </div>
+    </div>
+
+    <!-- 3x3 Piston Door -->
+    <div class="tutorial-card">
+      <div class="tutorial-tag-row">
+        <span class="t-tag featured">ADVANCED</span>
+        <span class="t-tag">PISTONS</span>
+        <span class="t-tag">TIMING</span>
+        <span class="t-tag">HARD</span>
+      </div>
+      <span class="card-icon">🏛️</span>
+      <div class="card-title">3×3 Piston Door</div>
+      <div class="card-desc">A grand 3-wide 3-tall door requiring precise timing so columns don't collide while opening.</div>
+      <div class="schematic">  ┌─────────┐
+  │[■][■][■]│ ← row 3
+  │[■][■][■]│ ← row 2  3 tall
+  │[■][■][■]│ ← row 1
+  └─────────┘
+     3 wide
+  Requires: 6 pistons each side
+  + repeater timing per row</div>
+      <div class="step-flow">
+        <div class="step-row"><span class="step-num">01</span><span class="step-text">Build a 6-wide, 4-tall doorway. The 3×3 blocks will retract sideways in 3 vertical columns.</span></div>
+        <div class="step-row"><span class="step-num">02</span><span class="step-text">Place 3 sticky pistons per side (6 total) — each piston handles one column (3 blocks tall).</span></div>
+        <div class="step-row"><span class="step-num">03</span><span class="step-text">Each column stack uses a vertical piston tower: bottom piston holds middle block, top piston holds top block via slime.</span></div>
+        <div class="step-row"><span class="step-num">04</span><span class="step-text">The middle row pistons fire FIRST, then the outer rows with 1-tick delay each — prevents block collision during open sequence.</span></div>
+        <div class="step-row"><span class="step-num">05</span><span class="step-text">Use a repeater delay line (1 RT per row) to stagger the firing sequence precisely.</span></div>
+        <div class="step-row"><span class="step-num">06</span><span class="step-text">Closing sequence is reversed — outer rows retract first, then middle. Wire a second delay line for close signal.</span></div>
+        <div class="step-row"><span class="step-num">07</span><span class="step-text">Add a T-flip-flop so a single button controls open/close with appropriate delay before switching state.</span></div>
+      </div>
+    </div>
+
+    <!-- Drawbridge -->
+    <div class="tutorial-card">
+      <div class="tutorial-tag-row">
+        <span class="t-tag">PISTONS</span>
+        <span class="t-tag">MOAT</span>
+        <span class="t-tag">MEDIUM</span>
+      </div>
+      <span class="card-icon">🌉</span>
+      <div class="card-title">Retractable Drawbridge</div>
+      <div class="card-desc">A 4-wide bridge that retracts into the wall when powered — perfect for moats and castle gates.</div>
+      <div class="step-flow">
+        <div class="step-row"><span class="step-num">01</span><span class="step-text">Build a 4-block wide gap (your moat). The bridge will span this gap when extended.</span></div>
+        <div class="step-row"><span class="step-num">02</span><span class="step-text">Place sticky pistons inside the wall facing outward across the gap, 4 wide and 1 tall.</span></div>
+        <div class="step-row"><span class="step-num">03</span><span class="step-text">Attach bridge blocks (stone slabs look great) to each piston head.</span></div>
+        <div class="step-row"><span class="step-num">04</span><span class="step-text">Wire all pistons together — power extends bridge, no power retracts it into the wall.</span></div>
+        <div class="step-row"><span class="step-num">05</span><span class="step-text">Use a lever inside your base to control — add a button outside that only extends (never retracts) for visitors.</span></div>
+      </div>
+    </div>
+
+    <!-- Combo Lock -->
+    <div class="tutorial-card">
+      <div class="tutorial-tag-row">
+        <span class="t-tag featured">SECURITY</span>
+        <span class="t-tag">LOGIC</span>
+        <span class="t-tag">HARD</span>
+      </div>
+      <span class="card-icon">🔓</span>
+      <div class="card-title">4-Digit Combination Lock</div>
+      <div class="card-desc">A sequential combination lock using 4 levers — must be toggled in the right order, not just the right positions.</div>
+      <div class="step-flow">
+        <div class="step-row"><span class="step-num">01</span><span class="step-text">Place 4 levers labeled 1–4. Each lever press must happen in the specific sequence you set.</span></div>
+        <div class="step-row"><span class="step-num">02</span><span class="step-text">Build a T-flip-flop for each step that only engages when the previous step is complete.</span></div>
+        <div class="step-row"><span class="step-num">03</span><span class="step-text">Each flip-flop gate enables the NEXT lever's detection — wrong lever resets the entire chain.</span></div>
+        <div class="step-row"><span class="step-num">04</span><span class="step-text">Final flip-flop output triggers the door. Any incorrect press fires a reset pulse through all stages.</span></div>
+        <div class="step-row"><span class="step-num">05</span><span class="step-text">Add an alarm dispenser that activates on wrong input for anti-griefer protection.</span></div>
+      </div>
+    </div>
+
+    <!-- Auto Sorter -->
+    <div class="tutorial-card">
+      <div class="tutorial-tag-row">
+        <span class="t-tag featured">UTILITY</span>
+        <span class="t-tag">HOPPERS</span>
+        <span class="t-tag">MEDIUM</span>
+      </div>
+      <span class="card-icon">📦</span>
+      <div class="card-title">Automatic Item Sorter</div>
+      <div class="card-desc">A hopper-based sorting system that routes items into specific chests based on type.</div>
+      <div class="step-flow">
+        <div class="step-row"><span class="step-num">01</span><span class="step-text">Build a main hopper line along the top of your chest wall — items flow horizontally through this trunk.</span></div>
+        <div class="step-row"><span class="step-num">02</span><span class="step-text">Place a hopper pointing into each chest you want to sort into. Connect it to the main line with a filter hopper above.</span></div>
+        <div class="step-row"><span class="step-num">03</span><span class="step-text">In each filter hopper, fill 4 slots with a non-target item (cobblestone) and leave 1 slot with the target item × 1.</span></div>
+        <div class="step-row"><span class="step-num">04</span><span class="step-text">Lock the filter hopper with a comparator + redstone signal so it only opens when target item passes through.</span></div>
+        <div class="step-row"><span class="step-num">05</span><span class="step-text">Items matching the filter drop into the chest below; unmatched items continue down the line to the next filter.</span></div>
+        <div class="step-row"><span class="step-num">06</span><span class="step-text">End the line with a misc chest for anything that doesn't match any filter category.</span></div>
+      </div>
+    </div>
+
+    <!-- TNT Cannon -->
+    <div class="tutorial-card">
+      <div class="tutorial-tag-row">
+        <span class="t-tag">EXPLOSIVES</span>
+        <span class="t-tag">TNT</span>
+        <span class="t-tag">MEDIUM</span>
+      </div>
+      <span class="card-icon">💣</span>
+      <div class="card-title">TNT Cannon</div>
+      <div class="card-desc">A water-cushioned TNT launcher using precise timing to fire a projectile TNT long distances.</div>
+      <div class="step-flow">
+        <div class="step-row"><span class="step-num">01</span><span class="step-text">Dig a channel 7 blocks long, 1 wide, 1 deep. This is the cannon barrel.</span></div>
+        <div class="step-row"><span class="step-num">02</span><span class="step-text">Place water at the back end of the channel only — it absorbs the blast from propellant TNT.</span></div>
+        <div class="step-row"><span class="step-num">03</span><span class="step-text">Place 6 TNT along the channel (propellant). Place 1 TNT at the open front end (projectile).</span></div>
+        <div class="step-row"><span class="step-num">04</span><span class="step-text">Wire a dispenser to drop the projectile TNT and simultaneously ignite propellant after a 1-tick delay.</span></div>
+        <div class="step-row"><span class="step-num">05</span><span class="step-text">Propellant explodes in water (no damage), shockwave launches projectile TNT forward at high speed.</span></div>
+      </div>
+    </div>
+
+    <!-- Mob Farm -->
+    <div class="tutorial-card">
+      <div class="tutorial-tag-row">
+        <span class="t-tag featured">FARM</span>
+        <span class="t-tag">XP</span>
+        <span class="t-tag">HARD</span>
+      </div>
+      <span class="card-icon">⚔️</span>
+      <div class="card-title">Mob XP Farm</div>
+      <div class="card-desc">A redstone-powered mob grinder with water flusher and drop shaft for AFK XP grinding.</div>
+      <div class="step-flow">
+        <div class="step-row"><span class="step-num">01</span><span class="step-text">Build a 16×16 dark room platform 128+ blocks above your AFK spot (forces spawn here vs elsewhere).</span></div>
+        <div class="step-row"><span class="step-num">02</span><span class="step-text">Add dispensers with water buckets on the outer walls on a 30-second clock to flush mobs to center.</span></div>
+        <div class="step-row"><span class="step-num">03</span><span class="step-text">Center has a 2×2 funnel leading to a drop shaft — mobs fall 22 blocks (leaves them at ½ heart).</span></div>
+        <div class="step-row"><span class="step-num">04</span><span class="step-text">Place a hopper minecart below to collect drops, feeding into a sorted storage system.</span></div>
+        <div class="step-row"><span class="step-num">05</span><span class="step-text">Stand at kill spot — one punch kills weakened mobs. AFK grind XP and loot efficiently.</span></div>
+      </div>
+    </div>
+
+  </div>
+</section>
+
+<!-- Scroll top -->
+<div class="scroll-top" id="scrollTop" onclick="window.scrollTo({top:0,behavior:'smooth'})">▲</div>
+
+<footer style="text-align:center; padding:40px 20px; color:var(--stone-light); font-family:'VT323',monospace; font-size:16px; letter-spacing:2px; border-top:1px solid var(--stone-mid); position:relative; z-index:1;">
+  ◆ REDSTONE COMPENDIUM ◆ THE ADVANCED ENGINEER'S GUIDE ◆
+</footer>
+
+<script>
+  // Particles
+  const container = document.getElementById('particles');
+  for (let i = 0; i < 18; i++) {
+    const p = document.createElement('div');
+    p.className = 'particle';
+    p.style.left = Math.random() * 100 + '%';
+    p.style.bottom = '0';
+    p.style.setProperty('--dur', (2 + Math.random() * 3) + 's');
+    p.style.setProperty('--delay', (Math.random() * 4) + 's');
+    p.style.setProperty('--drift', (Math.random() * 60 - 30) + 'px');
+    container.appendChild(p);
+  }
+
+  // Scroll progress
+  const progress = document.getElementById('progress');
+  const scrollTop = document.getElementById('scrollTop');
+  window.addEventListener('scroll', () => {
+    const pct = window.scrollY / (document.body.scrollHeight - window.innerHeight) * 100;
+    progress.style.width = pct + '%';
+    scrollTop.classList.toggle('visible', window.scrollY > 400);
+    updateNav();
+  });
+
+  // Nav active state
+  const sections = ['intro','easy','medium','hard','extreme','tutorials'];
+  const navBtns = document.querySelectorAll('.nav-btn');
+
+  function updateNav() {
+    let current = 'intro';
+    sections.forEach(id => {
+      const el = document.getElementById(id);
+      if (el && window.scrollY >= el.offsetTop - 120) current = id;
+    });
+    navBtns.forEach((btn, i) => {
+      btn.classList.toggle('active', sections[i] === current);
+    });
+  }
+
+  function scrollTo(id) {
+    const el = document.getElementById(id);
+    if (el) el.scrollIntoView({ behavior: 'smooth', block: 'start' });
+  }
+
+  // Card expand (click to expand steps on mobile)
+  document.querySelectorAll('.card').forEach(card => {
+    card.addEventListener('click', () => {
+      card.style.gridColumn = card.style.gridColumn === 'span 2' ? '' : 'span 2';
+    });
+  });
+</script>
+</body>
+</html>
